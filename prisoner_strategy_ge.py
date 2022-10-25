@@ -42,9 +42,23 @@ class Transition:
         self.is_linked = is_linked
         self.next_state = next_state
         if is_linked:
-            next_state.prob = my_response.prob
+            self.linked_selector: BinarySelector[tuple[Response, int]]\
+                    = BinarySelector((
+                        (my_response.options[0], next_state.options[0]), # Cooperate
+                        (my_response.options[1], next_state.options[1]), # Betrayal
+                    ), my_response.prob)
 
-    def response_state(self):
+    def response_state(self) -> tuple(Response, int):
+        if is_linked:
+            return self.linked_selector.select()
+        return self.my_response.select(), self.next_state.select()
 
 
-class DetrTransition:
+class DetrTransition(Transition):
+    def __init__(self, counterpart_response: Response, my_response: Response, next_state: int):
+        super().__init__(
+            counterpart_response=counterpart_response,
+            my_response=BinarySelector((my_response, my_response), (1, 0)),
+            linked=True,
+            next_state=BinarySelector((next_state, -1), (1, 0))
+        )
