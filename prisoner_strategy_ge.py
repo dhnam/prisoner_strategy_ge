@@ -1,7 +1,7 @@
 from enum import Enum, auto
 from abc import ABC
-from typing import TypeVar, Generic
-from random import choices
+from typing import TypeVar, Generic, Self
+from random import choices, choice, Random, sample
 
 # Classes: Strategy / State / Transition / Manager
 
@@ -48,10 +48,21 @@ class Transition:
                         (my_response.options[1], next_state.options[1]), # Betrayal
                     ), my_response.prob)
 
-    def response_state(self) -> tuple(Response, int):
+    def response_state(self) -> tuple[Response, int]:
         if is_linked:
             return self.linked_selector.select()
         return self.my_response.select(), self.next_state.select()
+
+    @classmethod
+    def get_random_of(cls: Self, counterpart_response: Response, next_state_candidate: list[int]) -> Self:
+        val_rand_response = Random()
+        val_rand_state = Random()
+        return cls.__init__(
+            counterpart_response=counterpart_response, 
+            my_response=BinarySelector(options=(Response.BETRAYAL, Response.COOPERATE), prob=(val_rand_response, 1 - val_rand_response)),
+            is_linked=choice((True, False)),
+            next_state=BinarySelector(options=sample(next_state_candidate, 2), prob=(val_rand_state, 1 - val_rand_state)),
+            )
 
 
 class DetrTransition(Transition):
