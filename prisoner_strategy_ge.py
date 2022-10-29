@@ -8,6 +8,7 @@ from random import choices, choice, Random, sample
 class State:
     def __init__(self, state_num: int):
         self.state_num = state_num
+        self.state_transitions: tuple[Transition, Transition] = ()
 
 class Response(Enum):
     COOPERATE = auto()
