@@ -25,6 +25,9 @@ class State:
             transition_type = DetrTransition
         self.state_transitions[response] = transition_type.get_random_of(response, state_candidates)
 
+    def response_state(self, counterpart_response: Response) -> tuple[Response, int]:
+        return self.state_transitions[counterpart_response].response_state()
+
 
 class Response(Enum):
     COOPERATE = auto()
