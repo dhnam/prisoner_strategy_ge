@@ -99,6 +99,19 @@ class Manager:
     def __init__(self):
         self._states: dict[int, State] = []
 
+    def __getitem__(self, key: int) -> State:
+        if key in self._states:
+            return self._states[key]
+        else:
+            max_state = max(list(self._states.keys()))
+            if key == max_state + 1:
+                self.add_state(State(key, self))
+                return self._states[key]
+            raise IndexError
+
+    def __setitem__(self, key: int, value: State):
+        raise NotImplementedError
+
     def add_state(self, state: State):
         self._states[state.state_num] = state
 
