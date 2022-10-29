@@ -5,14 +5,22 @@ from random import choices, choice, random, sample
 
 # Classes: Strategy / State / Transition / Manager
 
+# TODO: separate this to external file
+RANDOM_DETR_STATE_RATIO = 0.1
+
+TransitionType = TypeVar('TransitionType', bound=Transition)
+
 class State:
     def __init__(self, state_num: int, manager: Manager):
         self.state_num = state_num
         self.manager = manager
-        state_candidates = manager.get_state_candidates()
-        self.state_transitions: dict[Response, Transition] = {
-            Response.COOPERATE: Transition.get_random_of(Response.COOPERATE, )
-        }
+        self.state_transitions: dict[Response, TransitionType] = {}
+        for next_response in Response:
+            state_candidates = manager.get_state_candidates()
+            transition_type: type[TransitionType] = Transition
+            if random() > RANDOM_DETR_STATE_RATIO:
+                transition_type = DetrTransition
+            self.state_transitions[next_response] = transition_type.get_random_of(next_response, state_candidates)
 
 class Response(Enum):
     COOPERATE = auto()
@@ -89,13 +97,13 @@ class DetrTransition(Transition):
 
 class Manager:
     def __init__(self):
-        self.states: dict[int, State] = []
+        self._states: dict[int, State] = []
 
     def add_state(self, state: State):
-        self.states[state.state_num] = state
+        self._states[state.state_num] = state
 
     def get_state_candidates(self, has_new_state: bool=True) -> list[int]:
-        state_list = sorted(list(self.states.keys()))
+        state_list = sorted(list(self._states.keys()))
         if has_new_state:
             state_list.append(max(state_list) + 1)
 
