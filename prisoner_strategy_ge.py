@@ -1,14 +1,18 @@
 from enum import Enum, auto
 from abc import ABC
 from typing import TypeVar, Generic, Self
-from random import choices, choice, Random, sample
+from random import choices, choice, random, sample
 
 # Classes: Strategy / State / Transition / Manager
 
 class State:
-    def __init__(self, state_num: int):
+    def __init__(self, state_num: int, manager: Manager):
         self.state_num = state_num
-        self.state_transitions: tuple[Transition, Transition] = ()
+        self.manager = manager
+        state_candidates = manager.get_state_candidates()
+        self.state_transitions: dict[Response, Transition] = {
+            Response.COOPERATE: Transition.get_random_of(Response.COOPERATE, )
+        }
 
 class Response(Enum):
     COOPERATE = auto()
@@ -55,14 +59,14 @@ class Transition:
         return self.my_response.select(), self.next_state.select()
 
     @classmethod
-    def get_random_of(cls: Self, counterpart_response: Response, next_state_candidate: list[int]) -> Self:
-        val_rand_response = Random()
-        val_rand_state = Random()
+    def get_random_of(cls: Self, counterpart_response: Response, next_state_candidates: list[int]) -> Self:
+        val_rand_response = random()
+        val_rand_state = random()
         return cls.__init__(
             counterpart_response=counterpart_response, 
             my_response=BinarySelector(options=(Response.BETRAYAL, Response.COOPERATE), prob=(val_rand_response, 1 - val_rand_response)),
             is_linked=choice((True, False)),
-            next_state=BinarySelector(options=sample(next_state_candidate, 2), prob=(val_rand_state, 1 - val_rand_state)),
+            next_state=BinarySelector(options=sample(next_state_candidates, 2), prob=(val_rand_state, 1 - val_rand_state)),
             )
 
 
@@ -74,3 +78,25 @@ class DetrTransition(Transition):
             linked=True,
             next_state=BinarySelector((next_state, -1), (1, 0))
         )
+
+    @classmethod
+    def get_random_of(cls: Self, counterpart_response: Response, next_state_candidates: list[int]) -> Self:
+        return cls.__init__(
+            counterpart_response=counterpart_response,
+            my_response=choice([Response.BETRAYAL, Response.COOPERATE]),
+            next_state=choice(next_state_candidates),
+        )
+
+class Manager:
+    def __init__(self):
+        self.states: dict[int, State] = []
+
+    def add_state(self, state: State):
+        self.states[state.state_num] = state
+
+    def get_state_candidates(self, has_new_state: bool=True) -> list[int]:
+        state_list = sorted(list(self.states.keys()))
+        if has_new_state:
+            state_list.append(max(state_list) + 1)
+
+        return state_list
