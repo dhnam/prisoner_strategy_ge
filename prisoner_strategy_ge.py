@@ -16,11 +16,15 @@ class State:
         self.manager = manager
         self.state_transitions: dict[Response, TransitionType] = {}
         for next_response in Response:
-            state_candidates = manager.get_state_candidates()
-            transition_type: type[TransitionType] = Transition
-            if random() > RANDOM_DETR_STATE_RATIO:
-                transition_type = DetrTransition
-            self.state_transitions[next_response] = transition_type.get_random_of(next_response, state_candidates)
+            self.point_mutate_transition(next_response)
+
+    def point_mutate_transition(self, response: Response):
+        state_candidates = manager.get_state_candidates()
+        transition_type: type[TransitionType] = Transition
+        if random() > RANDOM_DETR_STATE_RATIO:
+            transition_type = DetrTransition
+        self.state_transitions[response] = transition_type.get_random_of(response, state_candidates)
+
 
 class Response(Enum):
     COOPERATE = auto()
@@ -35,7 +39,7 @@ class BinarySelector(Generic[T]):
         assert sum(prob) == 1.
 
     @property
-    def prob(self):
+    def prob(self) -> tuple[float, float]:
         return self._prob
 
     @prob.setter
