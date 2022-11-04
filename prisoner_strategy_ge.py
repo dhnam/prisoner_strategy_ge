@@ -32,7 +32,7 @@ class Strategy:
         ret_str += f"\tFirst move: {self.first_move}\n"
         for i, next_state in enumerate(self.manager):
             ret_str += indent(str(next_state), "\t>" if i == self.curr_state else "\t")
-        ret_str += "\n}"
+            ret_str += "\n}"
         return ret_str
 
     def make_first_move(self):
