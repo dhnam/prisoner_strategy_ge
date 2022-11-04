@@ -16,14 +16,15 @@ class Strategy:
     def __init__(self, name: str):
         self.name = name
         self.manager = Manager()
-        manager.add_state()
+        self.manager.add_state()
 
     def __str__(self):
         ret_str = f"Stratage {self.name}\n"
         ret_str += "{\n"
         for next_state in self.manager:
             ret_str += indent(str(next_state), "\t")
-        ret_str += "\n}"
+            ret_str += "\n"
+        ret_str += "}"
         return ret_str
 
 
@@ -33,7 +34,7 @@ class State:
         self.manager = manager
         self.state_transitions: dict[Response, TransitionType] = {}
         for next_response in Response:
-            self.point_mutate_transition(next_response, initing_state=True)
+            self.point_mutate_transition(next_response)
 
     def __str__(self):
         ret_str = f"State {self.state_num}\n"
@@ -43,16 +44,16 @@ class State:
         ret_str += "}"
         return ret_str
 
-    def point_mutate_transition(self, response: Response, initing_state: bool=False):
-        state_candidates = manager.get_state_candidates(initing_state=initing_state)
+    def point_mutate_transition(self, response: Response):
+        state_candidates = self.manager.get_state_candidates()
         transition_type: type[TransitionType] = Transition
         if random() > RANDOM_DETR_STATE_RATIO:
             transition_type = DetrTransition
         self.state_transitions[response] = transition_type.get_random_of(response, state_candidates)
-        tracked_candidates = manager.get_state_candidates(initing_state=initing_state, has_new_state=False)
+        tracked_candidates = self.manager.get_state_candidates(has_new_state=False)
         for next_option in self.state_transitions[response].next_state.options:
             if next_option >= 0 and next_option not in tracked_candidates:
-                manager[next_option] # Calling __getitem__ to initialize new state
+                self.manager[next_option] # Calling __getitem__ to initialize new state
 
     def response_state(self, counterpart_response: Response) -> tuple[Response, int]:
         return self.state_transitions[counterpart_response].response_state()
@@ -153,7 +154,7 @@ class DetrTransition(Transition):
 
 class Manager:
     def __init__(self):
-        self._states: list[State] = []
+        self._states: list[State | None] = []
 
     def __getitem__(self, key: int) -> State:
         if key < len(self):
@@ -161,7 +162,7 @@ class Manager:
         elif key == len(self):
             self.add_state()
             return self._states[key]
-        raise IndexError
+        raise IndexError(f"len:{len(self)}, key:{key}")
 
     def __setitem__(self, key: int, value: State):
         raise NotImplementedError
@@ -185,13 +186,12 @@ class Manager:
             raise StopIteration
 
     def add_state(self):
-        new_state = State(len(self), self)
-        self._states.append(new_state)
+        idx = len(self._states)
+        self._states.append(None)
+        self._states[idx] = State(len(self) - 1, self)
 
-    def get_state_candidates(self, initing_state: bool=False, has_new_state: bool=True) -> list[int]:
+    def get_state_candidates(self, has_new_state: bool=True) -> list[int]:
         max_num = len(self._states)
-        if initing_state:
-            max_num += 1
         if has_new_state:
             max_num += 1
 
