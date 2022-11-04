@@ -133,33 +133,50 @@ class DetrTransition(Transition):
 
 class Manager:
     def __init__(self):
-        self._states: dict[int, State] = {}
+        self._states: list[State] = []
 
     def __getitem__(self, key: int) -> State:
-        if key in self._states:
+        if key < len(self):
             return self._states[key]
-        else:
-            max_state = max(list(self._states.keys()))
-            if key == max_state + 1:
-                self.add_state(State(key, self))
-                return self._states[key]
-            raise IndexError
+        elif key == len(self):
+            self.add_state()
+            return self._states[key]
+        raise IndexError
 
     def __setitem__(self, key: int, value: State):
         raise NotImplementedError
 
-    def add_state(self, state: State):
-        self._states[state.state_num] = state
+    def __delitem__(self, key: int):
+        del self._states[key]
+
+    def __len__(self):
+        return len(self._states)
+
+    def __iter__(self):
+        self._iter_idx: int = 0
+        return self
+    
+    def __next__(self) -> State:
+        if self._iter_idx < len(self):
+            res = self._states[self._iter_idx]
+            self._iter_idx += 1
+            return res
+        else:
+            raise StopIteration
+
+    def add_state(self):
+        self._states.append(State(len(self), self))
 
     def get_state_candidates(self, has_new_state: bool=True) -> list[int]:
-        state_list = sorted(list(self._states.keys()))
+        state_list = list(range(len(self._states)))
         if has_new_state:
-            max_state = max(state_list) if len(state_list) != 0 else 0
-            state_list.append(max_state + 1)
+            state_list.append(len(self._states))
 
         return state_list
 
 if __name__ == "__main__":
     # TODO: Make test code here
     manager = Manager()
-    print(State(0, manager))
+    manager.add_state()
+    for next_state in manager:
+        print(next_state)
