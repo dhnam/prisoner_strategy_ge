@@ -165,7 +165,8 @@ class Manager:
             raise StopIteration
 
     def add_state(self):
-        self._states.append(State(len(self), self))
+        new_state = State(len(self), self)
+        self._states.append(new_state)
 
     def get_state_candidates(self, has_new_state: bool=True) -> list[int]:
         state_list = list(range(len(self._states)))
