@@ -17,7 +17,7 @@ class State:
         self.manager = manager
         self.state_transitions: dict[Response, TransitionType] = {}
         for next_response in Response:
-            self.point_mutate_transition(next_response)
+            self.point_mutate_transition(next_response, initing_state=True)
 
     def __str__(self):
         ret_str = f"State {self.state_num}\n"
@@ -27,8 +27,8 @@ class State:
         ret_str += "}"
         return ret_str
 
-    def point_mutate_transition(self, response: Response):
-        state_candidates = manager.get_state_candidates()
+    def point_mutate_transition(self, response: Response, initing_state: bool=False):
+        state_candidates = manager.get_state_candidates(initing_state=initing_state)
         transition_type: type[TransitionType] = Transition
         if random() > RANDOM_DETR_STATE_RATIO:
             transition_type = DetrTransition
@@ -168,12 +168,14 @@ class Manager:
         new_state = State(len(self), self)
         self._states.append(new_state)
 
-    def get_state_candidates(self, has_new_state: bool=True) -> list[int]:
-        state_list = list(range(len(self._states)))
+    def get_state_candidates(self, initing_state: bool=False, has_new_state: bool=True) -> list[int]:
+        max_num = len(self._states)
+        if initing_state:
+            max_num += 1
         if has_new_state:
-            state_list.append(len(self._states))
+            max_num += 1
 
-        return state_list
+        return list(range(max_num))
 
 if __name__ == "__main__":
     # TODO: Make test code here
