@@ -16,6 +16,7 @@ class Strategy:
     def __init__(self, name: str):
         self.name = name
         self.manager = Manager()
+        self.manager.add_state()
         self.curr_state: int = 0
         first_move_rand_detr = random()
         if first_move_rand_detr < RANDOM_DETR_STATE_RATIO:
