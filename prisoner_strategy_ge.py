@@ -9,7 +9,7 @@ from random import choices, choice, random, sample
 # TODO: separate this to external file
 RANDOM_DETR_STATE_RATIO = 0.1
 
-TransitionType = TypeVar('TransitionType', bound=Transition)
+TransitionType = TypeVar('TransitionType', bound='Transition')
 
 class State:
     def __init__(self, state_num: int, manager: Manager):
