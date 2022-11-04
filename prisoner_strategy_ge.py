@@ -18,6 +18,14 @@ class State:
         for next_response in Response:
             self.point_mutate_transition(next_response)
 
+    def __str__(self):
+        ret_str = f"State {self.state_num}\n"
+        ret_str += "{"
+        for next_response in Response:
+            ret_str += f"\t{self.state_transitions[next_response]}"
+        ret_str += "}"
+        return ret_str
+
     def point_mutate_transition(self, response: Response):
         state_candidates = manager.get_state_candidates()
         transition_type: type[TransitionType] = Transition
@@ -32,6 +40,12 @@ class State:
 class Response(Enum):
     COOPERATE = auto()
     BETRAYAL = auto()
+    def __str__(self):
+        if self.name == 'BETRAYAL':
+            return "B"
+        if self.name == "COOPERATE":
+            return "C"
+        raise TypeError
 
 T = TypeVar('T')
 
@@ -40,6 +54,16 @@ class BinarySelector(Generic[T]):
         self.options = options
         self._prob = prob
         assert sum(prob) == 1.
+
+    def __str__(self):
+        if max(self.prob) != 1.:
+            return f"({self.options[0]}({self.prob[0]:.1f})/{self.options[1]}({self.prob[1]:.1f}))"
+        if self.prob[0] == 1.:
+            detr = 0
+        else:
+            assert self.prob[1] == 1.
+            detr = 1
+        return f"{self.options[detr]}"
 
     @property
     def prob(self) -> tuple[float, float]:
@@ -67,6 +91,10 @@ class Transition:
                         (my_response.options[0], next_state.options[0]), # Cooperate
                         (my_response.options[1], next_state.options[1]), # Betrayal
                     ), my_response.prob)
+
+    def __str__(self):
+        return f"{self.counterpart_response}-{self.my_response}->{self.next_state}"
+
 
     def response_state(self) -> tuple[Response, int]:
         if is_linked:
@@ -128,3 +156,8 @@ class Manager:
             state_list.append(max(state_list) + 1)
 
         return state_list
+
+if __name__ == "__main__":
+    # TODO: Make test code here
+    manager = manager()
+    print(State(0, manager))
