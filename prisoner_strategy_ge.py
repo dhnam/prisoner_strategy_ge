@@ -106,7 +106,7 @@ class Transition:
     def get_random_of(cls: Self, counterpart_response: Response, next_state_candidates: list[int]) -> Self:
         val_rand_response = random()
         val_rand_state = random()
-        return cls.__init__(
+        return cls(
             counterpart_response=counterpart_response, 
             my_response=BinarySelector(options=(Response.BETRAYAL, Response.COOPERATE), prob=(val_rand_response, 1 - val_rand_response)),
             is_linked=choice((True, False)),
