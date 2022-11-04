@@ -16,16 +16,32 @@ class Strategy:
     def __init__(self, name: str):
         self.name = name
         self.manager = Manager()
-        self.manager.add_state()
+        self.curr_state: int = 0
+        first_move_rand_detr = random()
+        if first_move_rand_detr < RANDOM_DETR_STATE_RATIO:
+            coop_prob = random()
+            self.first_move: BinarySelector[Response] = BinarySelector((Response.COOPERATE, Response.BETRAYAL), (coop_prob, 1 - coop_prob))
+        else:
+            response = choice((Response.COOPERATE, Response.BETRAYAL))
+            self.first_move: BinarySelector[Response] = BinarySelector((response, response), (1, 0))
 
     def __str__(self):
         ret_str = f"Stratage {self.name}\n"
         ret_str += "{\n"
-        for next_state in self.manager:
-            ret_str += indent(str(next_state), "\t")
-            ret_str += "\n"
-        ret_str += "}"
+        ret_str += f"\tFirst move: {self.first_move}\n"
+        for i, next_state in enumerate(self.manager):
+            ret_str += indent(str(next_state), "\t>" if i == self.curr_state else "\t")
+        ret_str += "\n}"
         return ret_str
+
+    def make_first_move(self):
+        return self.first_move.select()
+    
+    def response(self, counterpart_response: Response):
+        res, next_state = self.manager[self.curr_state].response_state()
+        self.curr_state = next_state
+        return res
+
 
 
 class State:
