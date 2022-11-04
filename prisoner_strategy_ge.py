@@ -21,9 +21,9 @@ class State:
 
     def __str__(self):
         ret_str = f"State {self.state_num}\n"
-        ret_str += "{"
+        ret_str += "{\n"
         for next_response in Response:
-            ret_str += f"\t{self.state_transitions[next_response]}"
+            ret_str += f"\t{self.state_transitions[next_response]}\n"
         ret_str += "}"
         return ret_str
 
@@ -119,13 +119,13 @@ class DetrTransition(Transition):
         super().__init__(
             counterpart_response=counterpart_response,
             my_response=BinarySelector((my_response, my_response), (1, 0)),
-            linked=True,
+            is_linked=True,
             next_state=BinarySelector((next_state, -1), (1, 0))
         )
 
     @classmethod
     def get_random_of(cls: Self, counterpart_response: Response, next_state_candidates: list[int]) -> Self:
-        return cls.__init__(
+        return cls(
             counterpart_response=counterpart_response,
             my_response=choice([Response.BETRAYAL, Response.COOPERATE]),
             next_state=choice(next_state_candidates),
@@ -133,7 +133,7 @@ class DetrTransition(Transition):
 
 class Manager:
     def __init__(self):
-        self._states: dict[int, State] = []
+        self._states: dict[int, State] = {}
 
     def __getitem__(self, key: int) -> State:
         if key in self._states:
@@ -154,11 +154,12 @@ class Manager:
     def get_state_candidates(self, has_new_state: bool=True) -> list[int]:
         state_list = sorted(list(self._states.keys()))
         if has_new_state:
-            state_list.append(max(state_list) + 1)
+            max_state = max(state_list) if len(state_list) != 0 else 0
+            state_list.append(max_state + 1)
 
         return state_list
 
 if __name__ == "__main__":
     # TODO: Make test code here
-    manager = manager()
+    manager = Manager()
     print(State(0, manager))
