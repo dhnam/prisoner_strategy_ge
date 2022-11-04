@@ -3,6 +3,7 @@ from enum import Enum, auto
 from abc import ABC
 from typing import TypeVar, Generic, Self
 from random import choices, choice, random, sample
+from textwrap import indent
 
 # Classes: Strategy / State / Transition / Manager
 
@@ -10,6 +11,21 @@ from random import choices, choice, random, sample
 RANDOM_DETR_STATE_RATIO = 0.1
 
 TransitionType = TypeVar('TransitionType', bound='Transition')
+
+class Strategy:
+    def __init__(self, name: str):
+        self.name = name
+        self.manager = Manager()
+        manager.add_state()
+
+    def __str__(self):
+        ret_str = f"Stratage {self.name}\n"
+        ret_str += "{\n"
+        for next_state in self.manager:
+            ret_str += indent(str(next_state), "\t")
+        ret_str += "\n}"
+        return ret_str
+
 
 class State:
     def __init__(self, state_num: int, manager: Manager):
@@ -33,6 +49,10 @@ class State:
         if random() > RANDOM_DETR_STATE_RATIO:
             transition_type = DetrTransition
         self.state_transitions[response] = transition_type.get_random_of(response, state_candidates)
+        tracked_candidates = manager.get_state_candidates(initing_state=initing_state, has_new_state=False)
+        for next_option in self.state_transitions[response].next_state.options:
+            if next_option >= 0 and next_option not in tracked_candidates:
+                manager[next_option] # Calling __getitem__ to initialize new state
 
     def response_state(self, counterpart_response: Response) -> tuple[Response, int]:
         return self.state_transitions[counterpart_response].response_state()
@@ -179,7 +199,5 @@ class Manager:
 
 if __name__ == "__main__":
     # TODO: Make test code here
-    manager = Manager()
-    manager.add_state()
-    for next_state in manager:
-        print(next_state)
+    stratage = Strategy("test")
+    print(stratage)
