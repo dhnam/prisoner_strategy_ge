@@ -115,6 +115,13 @@ class Strategy(Clonable):
         return new
 
     def mutate(self, prob: float):
+        if random() < prob:
+            if random() < RANDOM_DETR_STATE_RATIO:
+                coop_prob = random()
+                self.first_move: BinarySelector[Response] = BinarySelector((Response.COOPERATE, Response.BETRAYAL), (coop_prob, 1 - coop_prob))
+            else:
+                response = choice((Response.COOPERATE, Response.BETRAYAL))
+                self.first_move: BinarySelector[Response] = BinarySelector((response, response), (1, 0))
         for next_state in self.manager:
             for next_response in Response:
                 if random() < prob:
