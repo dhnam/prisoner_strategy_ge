@@ -167,8 +167,8 @@ class BinarySelector(Generic[T]):
         assert sum(new_prob) == 1.
         self._prob = new_prob
 
-    def select() -> T:
-        return choices(options, weights=self._prob)[0]
+    def select(self) -> T:
+        return choices(self.options, weights=self._prob)[0]
 
 class Transition:
     # Transition: counterpart_response / my_response / is_linked / next_state
