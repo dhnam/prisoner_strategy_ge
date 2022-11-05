@@ -90,7 +90,7 @@ class Strategy:
         return self.first_move.select()
     
     def make_response(self, counterpart_response: Response) -> Response:
-        res, next_state = self.manager[self.curr_state].response_state()
+        res, next_state = self.manager[self.curr_state].response_state(counterpart_response)
         self.curr_state = next_state
         return res
     
