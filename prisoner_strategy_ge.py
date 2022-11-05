@@ -4,6 +4,7 @@ from abc import ABC
 from typing import TypeVar, Generic, Self
 from random import choices, choice, random, sample
 from textwrap import indent
+from dataclasses import dataclass
 
 # Classes: Strategy / State / Transition / Manager
 
@@ -11,6 +12,55 @@ from textwrap import indent
 RANDOM_DETR_STATE_RATIO = 0.1
 
 TransitionType = TypeVar('TransitionType', bound='Transition')
+
+@dataclass
+class RewardTable:
+    coop_coop: float
+    coop_betr: float
+    betr_coop: float
+    betr_betr: float
+
+    def get_rewards(self, resp_a: Response, resp_b: Response) -> tuple[float, float]:
+        if (resp_a, resp_b) == (Response.COOPERATE, Response.COOPERATE):
+            return self.coop_coop, self.coop_coop
+        if (resp_a, resp_b) == (Response.COOPERATE, Response.BETRAYAL):
+            return self.coop_betr, self.betr_coop
+        if (resp_a, resp_b) == (Response.BETRAYAL, Response.COOPERATE):
+            return self.betr_coop, self.coop_betr
+        return self.betr_betr, self.betr_betr
+
+
+class Duel:
+    def __init__(self, strategy_a: Strategy, strategy_b: Strategy, reward_table: RewardTable, iter_length: int):
+        self.strategy_a = strategy_a
+        self.strategy_b = strategy_b
+        self.reward_table = reward_table
+        self.iter_length = iter_length
+        self.rewards: tuple[float, float] = (0, 0)
+        self.last_responses: tuple[Response, Response] = (None, None)
+
+    def __iter__(self):
+        self._iter_cnt = 0
+        self.strategy_a.reset()
+        self.strategy_b.reset()
+        self.rewards: tuple[float, float] = (0, 0)
+        return self
+
+    def __next__(self) -> tuple[tuple[Response, Response], tuple[float, float]]:
+        if self._iter_cnt >= self.iter_length:
+            raise StopIteration
+
+        if self._iter_cnt == 0:
+            responses = (self.strategy_a.make_first_move(), self.strategy_b.make_first_move())
+        else:
+            responses = (self.strategy_a.make_response(self.last_responses[1]), self.strategy_b.make_response(self.last_response[0]))
+        self.last_responses = responses
+        reward_a, reward_b = self.reward_table.get_rewards(*responses)
+        self.rewards[0] += reward_a
+        self.rewards[1] += reward_b
+        self._iter_cnt += 1
+        return responses, self.rewards
+
 
 class Strategy:
     def __init__(self, name: str):
@@ -31,7 +81,7 @@ class Strategy:
         ret_str += "{\n"
         ret_str += f"\tFirst move: {self.first_move}\n"
         for i, next_state in enumerate(self.manager):
-            ret_str += indent(str(next_state), "\t>" if i == self.curr_state else "\t")
+            ret_str += indent(str(next_state), "\t")
             ret_str += "\n"
         ret_str += "\n}"
         return ret_str
@@ -39,10 +89,13 @@ class Strategy:
     def make_first_move(self):
         return self.first_move.select()
     
-    def response(self, counterpart_response: Response):
+    def make_response(self, counterpart_response: Response) -> Response:
         res, next_state = self.manager[self.curr_state].response_state()
         self.curr_state = next_state
         return res
+    
+    def reset(self):
+        self.curr_state = 0
 
 
 
@@ -217,5 +270,10 @@ class Manager:
 
 if __name__ == "__main__":
     # TODO: Make test code here
-    stratage = Strategy("test")
-    print(stratage)
+    stratage1 = Strategy("test1")
+    print(stratage1)
+    stratage2 = Strategy("test2")
+    print(stratage2)
+    sample_reward = RewardTable(2, 0, 3, 1)
+    for i, (next_response, next_reward) in enumerate(Duel(stratage1, stratage2, sample_reward, 10)):
+        print(f"{i}: {next_response}, {next_reward}")
