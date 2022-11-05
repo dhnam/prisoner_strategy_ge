@@ -53,7 +53,7 @@ class Duel:
         if self._iter_cnt == 0:
             responses = (self.strategy_a.make_first_move(), self.strategy_b.make_first_move())
         else:
-            responses = (self.strategy_a.make_response(self.last_responses[1]), self.strategy_b.make_response(self.last_response[0]))
+            responses = (self.strategy_a.make_response(self.last_responses[1]), self.strategy_b.make_response(self.last_responses[0]))
         self.last_responses = responses
         reward_a, reward_b = self.reward_table.get_rewards(*responses)
         new_rewards = (self.rewards[0] + reward_a, self.rewards[1] + reward_b)
@@ -140,6 +140,9 @@ class Response(Enum):
             return "C"
         raise TypeError
 
+    def __repr__(self):
+        return str(self)
+
 T = TypeVar('T')
 
 class BinarySelector(Generic[T]):
@@ -190,7 +193,7 @@ class Transition:
 
 
     def response_state(self) -> tuple[Response, int]:
-        if is_linked:
+        if self.is_linked:
             return self.linked_selector.select()
         return self.my_response.select(), self.next_state.select()
 
