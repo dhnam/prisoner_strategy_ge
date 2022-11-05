@@ -5,6 +5,7 @@ from typing import TypeVar, Generic, Self
 from random import choices, choice, random, sample
 from textwrap import indent
 from dataclasses import dataclass
+from abc import ABC, abstractmethod
 
 # Classes: Strategy / State / Transition / Manager
 
@@ -12,6 +13,13 @@ from dataclasses import dataclass
 RANDOM_DETR_STATE_RATIO = 0.1
 
 TransitionType = TypeVar('TransitionType', bound='Transition')
+
+class Clonable(ABC):
+
+    @classmethod
+    @abstractmethod
+    def clone(cls, src: Self) -> Self:
+        pass
 
 @dataclass
 class RewardTable:
@@ -62,7 +70,7 @@ class Duel:
         return responses, self.rewards
 
 
-class Strategy:
+class Strategy(Clonable):
     def __init__(self, name: str):
         self.name = name
         self.manager = Manager()
@@ -97,9 +105,17 @@ class Strategy:
     def reset(self):
         self.curr_state = 0
 
+    @classmethod
+    def clone(cls, src: Self) -> Self:
+        new = cls.__new__(cls)
+        new.name = src.name
+        new.manager = Manager.from_state_list(list(map(State.clone, src.manager)))
+        new.curr_state = 0
+        new.first_move = BinarySelector.clone(src.first_move)
 
 
-class State:
+
+class State(Clonable):
     def __init__(self, state_num: int, manager: Manager):
         self.state_num = state_num
         self.manager = manager
@@ -129,6 +145,14 @@ class State:
     def response_state(self, counterpart_response: Response) -> tuple[Response, int]:
         return self.state_transitions[counterpart_response].response_state()
 
+    @classmethod
+    def clone(cls, src: Self) -> Self:
+        new = cls.__new__(cls)
+        new.state_num = src.state_num
+        new.manager = src.manager
+        new.state_transitions = {res: type(trn).clone(trn) for res, trn in src.state_transitions.items()}
+        return new
+
 
 class Response(Enum):
     COOPERATE = auto()
@@ -145,7 +169,7 @@ class Response(Enum):
 
 T = TypeVar('T')
 
-class BinarySelector(Generic[T]):
+class BinarySelector(Generic[T], Clonable):
     def __init__(self, options: tuple[T, T], prob: tuple[float, float]):
         self.options = options
         self._prob = prob
@@ -173,7 +197,13 @@ class BinarySelector(Generic[T]):
     def select(self) -> T:
         return choices(self.options, weights=self._prob)[0]
 
-class Transition:
+    @classmethod
+    def clone(cls, src: Self) -> Self:
+        return cls(src.options, src.prob)
+    
+    
+
+class Transition(Clonable):
     # Transition: counterpart_response / my_response / is_linked / next_state
     # DetrTransition: counterpart_response / my_response / next_state
     def __init__(self, counterpart_response: Response, my_response: BinarySelector[Response], is_linked: bool, next_state: BinarySelector[int]):
@@ -191,7 +221,6 @@ class Transition:
     def __str__(self):
         return f"{self.counterpart_response}-{self.my_response}->{self.next_state}"
 
-
     def response_state(self) -> tuple[Response, int]:
         if self.is_linked:
             return self.linked_selector.select()
@@ -207,6 +236,22 @@ class Transition:
             is_linked=choice((True, False)),
             next_state=BinarySelector(options=sample(next_state_candidates, 2), prob=(val_rand_state, 1 - val_rand_state)),
             )
+    
+    @classmethod
+    def clone(cls, src: Self) -> Self:
+        new = cls.__new__(cls)
+        new.counterpart_response = src.counterpart_response
+        new.my_response = src.my_response
+        new.is_linked = src.is_linked
+        new.next_state = src.next_state
+        if new.is_linked:
+            new.linked_selector: BinarySelector[tuple[Response, int]]\
+                    = BinarySelector((
+                        (new.my_response.options[0], new.next_state.options[0]), # Cooperate
+                        (new.my_response.options[1], new.next_state.options[1]), # Betrayal
+                    ), new.my_response.prob)
+        return new
+
 
 
 class DetrTransition(Transition):
@@ -271,11 +316,20 @@ class Manager:
 
         return list(range(max_num))
 
+    @classmethod
+    def from_state_list(self, state_list: list[State]):
+        new = cls.__new__(cls)
+        state_list = sorted(state_list, key=lambda x: x.state_num)
+        new._states = state_list
+        for next_state in state_list:
+            next_state.manager = new
+        return new
+
 if __name__ == "__main__":
     # TODO: Make test code here
     stratage1 = Strategy("test1")
     print(stratage1)
-    stratage2 = Strategy("test2")
+    stratage2 = Strategy.clone(stratage1)
     print(stratage2)
     sample_reward = RewardTable(2, 0, 3, 1)
     for i, (next_response, next_reward) in enumerate(Duel(stratage1, stratage2, sample_reward, 10)):
