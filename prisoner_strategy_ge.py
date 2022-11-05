@@ -76,8 +76,7 @@ class Strategy(Clonable):
         self.manager = Manager()
         self.manager.add_state()
         self.curr_state: int = 0
-        first_move_rand_detr = random()
-        if first_move_rand_detr < RANDOM_DETR_STATE_RATIO:
+        if random() < RANDOM_DETR_STATE_RATIO:
             coop_prob = random()
             self.first_move: BinarySelector[Response] = BinarySelector((Response.COOPERATE, Response.BETRAYAL), (coop_prob, 1 - coop_prob))
         else:
