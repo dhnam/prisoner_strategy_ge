@@ -56,8 +56,8 @@ class Duel:
             responses = (self.strategy_a.make_response(self.last_responses[1]), self.strategy_b.make_response(self.last_response[0]))
         self.last_responses = responses
         reward_a, reward_b = self.reward_table.get_rewards(*responses)
-        self.rewards[0] += reward_a
-        self.rewards[1] += reward_b
+        new_rewards = (self.rewards[0] + reward_a, self.rewards[1] + reward_b)
+        self.rewards = new_rewards
         self._iter_cnt += 1
         return responses, self.rewards
 
