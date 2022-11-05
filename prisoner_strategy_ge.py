@@ -114,6 +114,12 @@ class Strategy(Clonable):
         new.first_move = BinarySelector.clone(src.first_move)
         return new
 
+    def mutate(self, prob: float):
+        for next_state in self.manager:
+            for next_response in Response:
+                if random() < prob:
+                    next_state.point_mutate_transition(next_response)
+
 
 
 class State(Clonable):
@@ -330,7 +336,7 @@ if __name__ == "__main__":
     # TODO: Make test code here
     stratage1 = Strategy("test1")
     print(stratage1)
-    stratage2 = Strategy.clone(stratage1)
+    stratage2 = Strategy.clone(stratage1).mutate(0.3)
     print(stratage2)
     sample_reward = RewardTable(2, 0, 3, 1)
     for i, (next_response, next_reward) in enumerate(Duel(stratage1, stratage2, sample_reward, 10)):
