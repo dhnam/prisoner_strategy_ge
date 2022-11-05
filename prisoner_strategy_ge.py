@@ -112,6 +112,7 @@ class Strategy(Clonable):
         new.manager = Manager.from_state_list(list(map(State.clone, src.manager)))
         new.curr_state = 0
         new.first_move = BinarySelector.clone(src.first_move)
+        return new
 
 
 
@@ -317,7 +318,7 @@ class Manager:
         return list(range(max_num))
 
     @classmethod
-    def from_state_list(self, state_list: list[State]):
+    def from_state_list(cls, state_list: list[State]):
         new = cls.__new__(cls)
         state_list = sorted(state_list, key=lambda x: x.state_num)
         new._states = state_list
