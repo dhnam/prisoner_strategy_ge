@@ -1,6 +1,5 @@
 from __future__ import annotations
 from enum import Enum, auto
-from abc import ABC
 from typing import TypeVar, Generic, Self
 from random import choices, choice, random, sample
 from textwrap import indent
