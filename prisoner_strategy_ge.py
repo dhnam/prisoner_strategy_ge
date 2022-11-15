@@ -112,7 +112,7 @@ class Strategy(Clonable):
         new.first_move = BinarySelector.clone(src.first_move)
         return new
 
-    def mutate(self, prob: float):
+    def mutate(self, prob: float) -> Self:
         if random() < prob:
             if random() < RANDOM_DETR_STATE_RATIO:
                 coop_prob = random()
@@ -124,6 +124,7 @@ class Strategy(Clonable):
             for next_response in Response:
                 if random() < prob:
                     next_state.point_mutate_transition(next_response)
+        return self
 
 
 
