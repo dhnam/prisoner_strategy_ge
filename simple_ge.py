@@ -1,12 +1,12 @@
-from stratage.basic_config import *
-from stratage import Stratage
-from duel import Duel
+from strategy.basic_config import *
+from strategy.strategy import Strategy
+from strategy.duel import Duel
 
 class Environment:
     def __init__(self, size: int):
-        self.population: list[Stratage] = []
+        self.population: list[Strategy] = []
         for next_population in range(size):
-            self.population.append(Stratage(f"Gen0_{next_population}"))
+            self.population.append(Strategy(f"Gen0_{next_population}"))
 
 if __name__ == "__main__":
     env = Environment(2)

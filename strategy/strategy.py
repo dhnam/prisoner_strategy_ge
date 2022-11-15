@@ -1,11 +1,10 @@
 from __future__ import annotations
-from enum import Enum, auto
 from typing import TypeVar, Generic, Self
 from random import choices, choice, random, sample
 from textwrap import indent
-from dataclasses import dataclass
 from abc import ABC, abstractmethod
-from basic_config import *
+from .basic_config import *
+from .response import Response
 
 # Classes: Strategy / State / Transition / Manager
 
@@ -115,19 +114,6 @@ class State(Clonable):
         new.state_transitions = {res: type(trn).clone(trn) for res, trn in src.state_transitions.items()}
         return new
 
-
-class Response(Enum):
-    COOPERATE = auto()
-    BETRAYAL = auto()
-    def __str__(self):
-        if self.name == 'BETRAYAL':
-            return "B"
-        if self.name == "COOPERATE":
-            return "C"
-        raise TypeError
-
-    def __repr__(self):
-        return str(self)
 
 T = TypeVar('T')
 
@@ -288,7 +274,7 @@ class Manager:
         return new
 
 if __name__ == "__main__":
-    from duel import Duel
+    from .duel import Duel
     # TODO: Make test code here
     stratage1 = Strategy("test1")
     print(stratage1)
