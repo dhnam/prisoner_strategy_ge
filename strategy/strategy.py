@@ -281,5 +281,5 @@ if __name__ == "__main__":
     stratage2 = Strategy.clone(stratage1).mutate(MUTATE_RATE)
     stratage2.name = "test2"
     print(stratage2)
-    for i, (next_response, next_reward) in enumerate(Duel(stratage1, stratage2, REWARD_TABLE, 10)):
+    for i, (next_response, next_reward) in enumerate(Duel(stratage1, stratage2, REWARD_TABLE, DUEL_LENGTH)):
         print(f"{i}: {next_response}, {next_reward}")

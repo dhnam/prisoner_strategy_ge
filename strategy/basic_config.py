@@ -6,6 +6,7 @@ from .rewardtable import RewardTable
 RANDOM_DETR_STATE_RATIO: float
 MUTATE_RATE: float
 REWARD_TABLE: RewardTable
+DUEL_LENGTH: int
 
 config_path = Path(__file__).with_name('config.json')
 with open(config_path, 'r') as f:
@@ -13,3 +14,4 @@ with open(config_path, 'r') as f:
     RANDOM_DETR_STATE_RATIO = setting["RANDOM_DETR_STATE_RATIO"]
     MUTATE_RATE = setting["MUTATE_RATE"]
     REWARD_TABLE = RewardTable(**setting["REWARD_TABLE"])
+    DUEL_LENGTH = setting["DUEL_LENGTH"]

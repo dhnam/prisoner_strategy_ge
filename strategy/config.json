@@ -6,5 +6,6 @@
         "coop_betr": 0,
         "betr_coop": 3,
         "betr_betr": 1
-    }
+    },
+    "DUEL_LENGTH": 10
 }
