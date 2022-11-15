@@ -5,14 +5,9 @@ from random import choices, choice, random, sample
 from textwrap import indent
 from dataclasses import dataclass
 from abc import ABC, abstractmethod
-import json
-from pathlib import Path
+from basic_config import *
 
 # Classes: Strategy / State / Transition / Manager
-
-
-RANDOM_DETR_STATE_RATIO: float
-MUTATE_RATE: float
 
 TransitionType = TypeVar('TransitionType', bound='Transition')
 
@@ -292,14 +287,8 @@ class Manager:
             next_state.manager = new
         return new
 
-config_path = Path(__file__).with_name('config.json')
-with open(config_path, 'r') as f:
-    setting = json.load(f)
-    RANDOM_DETR_STATE_RATIO = setting["RANDOM_DETR_STATE_RATIO"]
-    MUTATE_RATE = setting["MUTATE_RATE"]
-
 if __name__ == "__main__":
-    from duel import Duel, REWARD_TABLE
+    from duel import Duel
     # TODO: Make test code here
     stratage1 = Strategy("test1")
     print(stratage1)

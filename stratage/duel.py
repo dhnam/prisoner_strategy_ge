@@ -1,6 +1,5 @@
 from __future__ import annotations
 from stratage import *
-from pathlib import Path
 
 REWARD_TABLE: RewardTable
 
@@ -51,8 +50,3 @@ class Duel:
         self.rewards = new_rewards
         self._iter_cnt += 1
         return responses, self.rewards
-
-config_path = Path(__file__).with_name('config.json')
-with open(config_path, 'r') as f:
-    setting = json.load(f)
-    REWARD_TABLE = RewardTable(**setting["REWARD_TABLE"])
