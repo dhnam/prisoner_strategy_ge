@@ -1,4 +1,6 @@
-from prisoner_strategy import *
+from stratage.basic_config import *
+from stratage import Stratage
+from duel import Duel
 
 class Environment:
     def __init__(self, size: int):
