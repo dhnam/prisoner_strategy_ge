@@ -1,5 +1,5 @@
 from duel import RewardTable
-from json import json
+import json
 from pathlib import Path
 
 config_path = Path(__file__).with_name('config.json')
