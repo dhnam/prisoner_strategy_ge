@@ -5,16 +5,18 @@ from random import choices, choice, random, sample
 from textwrap import indent
 from dataclasses import dataclass
 from abc import ABC, abstractmethod
+import json
 
 # Classes: Strategy / State / Transition / Manager
 
 # TODO: separate this to external file
-RANDOM_DETR_STATE_RATIO = 0.1
+RANDOM_DETR_STATE_RATIO: float
+MUTATE_RATE: float
+REWARD_TABLE: RewardTable
 
 TransitionType = TypeVar('TransitionType', bound='Transition')
 
 class Clonable(ABC):
-
     @classmethod
     @abstractmethod
     def clone(cls, src: Self) -> Self:
@@ -338,12 +340,18 @@ class Manager:
             next_state.manager = new
         return new
 
+with open("config.json", 'r') as f:
+    setting = json.load(f)
+    RANDOM_DETR_STATE_RATIO = setting["RANDOM_DETR_STATE_RATIO"]
+    MUTATE_RATE = setting["MUTATE_RATE"]
+    REWARD_TABLE = RewardTable(**setting["REWARD_TABLE"])
+
 if __name__ == "__main__":
     # TODO: Make test code here
     stratage1 = Strategy("test1")
     print(stratage1)
-    stratage2 = Strategy.clone(stratage1).mutate(0.3)
+    stratage2 = Strategy.clone(stratage1).mutate(MUTATE_RATE)
+    stratage2.name = "test2"
     print(stratage2)
-    sample_reward = RewardTable(2, 0, 3, 1)
-    for i, (next_response, next_reward) in enumerate(Duel(stratage1, stratage2, sample_reward, 10)):
+    for i, (next_response, next_reward) in enumerate(Duel(stratage1, stratage2, REWARD_TABLE, 10)):
         print(f"{i}: {next_response}, {next_reward}")

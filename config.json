@@ -1,0 +1,10 @@
+{
+    "RANDOM_DETR_STATE_RATIO": 0.1,
+    "MUTATE_RATE": 0.3,
+    "REWARD_TABLE": {
+        "coop_coop": 2,
+        "coop_betr": 0,
+        "betr_coop": 3,
+        "betr_betr": 1
+    }
+}
