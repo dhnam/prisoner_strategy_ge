@@ -22,11 +22,26 @@ class Environment:
             self.scores[strt1_idx] = strt1_final_reward
             self.scores[strt2_idx] = strt2_final_reward
 
+    def new_generation(self):
+        # stratage: 50% -> last gen, 50%: percentage-based
+        self.scores = [0] * size
+
 
 
 
 if __name__ == "__main__":
-    env = Environment(2)
-    env.generation_processing()
-    print(env.scores)
 
+    # Loop
+    population = int(input("Input population: "))
+    env = Environment(population)
+    gen = 0
+    while True:
+        # Menu: process, show top, ...?
+        print(f"====GENERATION {gen}====")
+        menu = input("Process: p, Show nth: (input number), Show score: s")
+        if menu == "p":
+            env.generation_processing()
+        if menu.isdigit() and int(menu) < population:
+            print(self.population[int(menu)])
+        if menu == "s":
+            print(self.scores)
