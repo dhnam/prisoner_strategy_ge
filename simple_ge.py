@@ -1,5 +1,6 @@
 from itertools import combinations_with_replacement
 import random
+from tqdm import tqdm
 from strategy.basic_config import *
 from strategy.strategy import Strategy
 from strategy.duel import Duel
@@ -67,7 +68,7 @@ if __name__ == "__main__":
                     forward = 1
                 else:
                     forward = int(menu[1:])
-                for _ in range(forward):
+                for _ in tqdm(range(forward)):
                     gen += 1
                     env.next_generation()
                     env.generation_processing()
