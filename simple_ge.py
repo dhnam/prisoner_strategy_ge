@@ -1,8 +1,8 @@
+from itertools import combinations_with_replacement
+import random
 from strategy.basic_config import *
 from strategy.strategy import Strategy
 from strategy.duel import Duel
-from itertools import combinations_with_replacement
-import random
 
 class Environment:
     def __init__(self, size: int):
@@ -45,17 +45,17 @@ if __name__ == "__main__":
     # Loop
     population = int(input("Input population: "))
     env = Environment(population)
-    gen = 0
+    gen: int = 0
     env.generation_processing()
     while True:
         # Menu: process, show top, ...?
         print(f"====GENERATION {gen}====")
-        menu = input("Process: p, Show nth: (input number), Show score: s")
+        menu = input("Process: p, Show nth: (input number), Show score: s\ninput: ")
         if menu == "p":
             gen += 1
             env.next_generation()
             env.generation_processing()
         if menu.isdigit() and int(menu) < population:
-            print(self.population[int(menu)])
+            print(env.population[int(menu)])
         if menu == "s":
-            print(self.scores)
+            print(env.scores)
