@@ -3,6 +3,7 @@ import random
 from strategy.basic_config import *
 from strategy.strategy import Strategy
 from strategy.duel import Duel
+import strategy.sample_strategy
 
 class Environment:
     def __init__(self, size: int):
@@ -30,10 +31,13 @@ class Environment:
 
     def next_generation(self):
         # stratage: 100%: percentage-based
-        parents = random.choices(self.population, self.scores, k=len(self.size))
+        parents = random.choices(self.population, self.scores, k=self.size)
         self.population = []
-        for next_parent in parents:
-            self.population.append(next_parent.clone().mutate(MUTATE_RATE))
+        self.generation += 1
+        for i, next_parent in enumerate(parents):
+            child = Strategy.clone(next_parent).mutate(MUTATE_RATE)
+            child.name = f"Gen{self.generation}_{i}_base{next_parent.name.split('_base')[0]}"
+            self.population.append(child)
 
         self.scores = [0] * self.size
 
@@ -47,15 +51,40 @@ if __name__ == "__main__":
     env = Environment(population)
     gen: int = 0
     env.generation_processing()
+    sample_strategies = [
+        strategy.sample_strategy.AlwaysCoopStrategy(),
+        strategy.sample_strategy.AlwaysBetrStrategy(),
+        strategy.sample_strategy.TFTStrategy(),
+        None
+        ]
+    print(f"====GENERATION {gen}====")
     while True:
         # Menu: process, show top, ...?
-        print(f"====GENERATION {gen}====")
-        menu = input("Process: p, Show nth: (input number), Show score: s\ninput: ")
-        if menu == "p":
-            gen += 1
-            env.next_generation()
-            env.generation_processing()
-        if menu.isdigit() and int(menu) < population:
-            print(env.population[int(menu)])
-        if menu == "s":
-            print(env.scores)
+        menu = input("Process: p(+num), Show nth: (input number), Show score: s, Ordered: o, Sample duel: S(num)\ninput: ")
+        try:
+            if menu[0] == "p":
+                if len(menu[1:]) == 0:
+                    forward = 1
+                else:
+                    forward = int(menu[1:])
+                for _ in range(forward):
+                    gen += 1
+                    env.next_generation()
+                    env.generation_processing()
+                print(f"====GENERATION {gen}====")
+            if menu.isdigit() and int(menu) < population:
+                print(env.population[int(menu)])
+            if menu == "s":
+                print(env.scores)
+            if menu == "o":
+                print([x for _, x in sorted(zip(env.scores, range(population)), reverse=True)])
+            if menu[0] == "S":
+                strt_1 = env.population[int(menu[1:])]
+                sample_strategies[-1] = strt_1
+                for strt_2 in sample_strategies:
+                    print(f"{strt_1.name} VS {strt_2.name}")
+                    for i, (next_response, next_reward) in enumerate(Duel(strt_1, strt_2, REWARD_TABLE, DUEL_LENGTH)):
+                        print(f"{i}: {next_response}, {next_reward}")
+        except ValueError:
+            print("Invalid input. Please Try again.")
+
