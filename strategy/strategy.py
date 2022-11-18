@@ -114,6 +114,16 @@ class State(Clonable):
         new.state_transitions = {res: type(trn).clone(trn) for res, trn in src.state_transitions.items()}
         return new
 
+    @classmethod
+    def from_predefined(cls, state_num: int, coop_transition: TransitionType, betr_transition: TransitionType) -> Self:
+        new = cls.__new__(cls)
+        new.state_num = state_num
+        new.manager = None
+        assert coop_transition.counterpart_response == Response.COOPERATE
+        assert betr_transition.counterpart_response == Response.BETRAYAL
+        new.state_transitions = {Response.COOPERATE: coop_transition, Response.BETRAYAL: betr_transition}
+        return new
+
 
 T = TypeVar('T')
 
