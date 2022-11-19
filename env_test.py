@@ -18,7 +18,7 @@ def test(env_class: type[Environment]):
     print(f"====GENERATION {gen}====")
     while True:
         # Menu: process, show top, ...?
-        menu = input("Process: p(+num), Show nth: (input number), Show score: s, Ordered: o, Sample duel: S(num)\ninput: ")
+        menu = input("Process: p(+num), Show nth: (input number), Show score: s, Ordered: o, Sample duel: S(num), History: h\ninput: ")
         try:
             if menu[0] == "p":
                 if len(menu[1:]) == 0:
@@ -43,5 +43,8 @@ def test(env_class: type[Environment]):
                     print(f"{strt_1.name} VS {strt_2.name}")
                     for i, (next_response, next_reward) in enumerate(Duel(strt_1, strt_2, REWARD_TABLE, DUEL_LENGTH)):
                         print(f"{i}: {next_response}, {next_reward}")
+            if menu == "h":
+                env.export_history("output.png")
+                
         except ValueError:
             print("Invalid input. Please Try again.")

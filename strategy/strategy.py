@@ -5,6 +5,7 @@ from textwrap import indent
 from abc import ABC, abstractmethod
 from .basic_config import *
 from .response import Response
+from anytree import NodeMixin
 
 # Classes: Strategy / State / Transition / Manager
 
@@ -17,12 +18,14 @@ class Clonable(ABC):
         pass
 
 
-class Strategy(Clonable):
-    def __init__(self, name: str):
+class Strategy(Clonable, NodeMixin):
+    def __init__(self, name: str, logging: bool=True, parent: Self=None):
         self.name = name
         self.manager = Manager()
         self.manager.add_state()
         self.curr_state: int = 0
+        self.parent = parent
+        self.logging = logging
         if random() < RANDOM_DETR_STATE_RATIO:
             coop_prob = random()
             self.first_move: BinarySelector[Response] = BinarySelector((Response.COOPERATE, Response.BETRAYAL), (coop_prob, 1 - coop_prob))
@@ -30,11 +33,15 @@ class Strategy(Clonable):
             response = choice((Response.COOPERATE, Response.BETRAYAL))
             self.first_move: BinarySelector[Response] = BinarySelector((response, response), (1, 0))
 
+    @property
+    def short_str(self):
+        return f"{self.name} ({len(self.manager)} states)"
+
     def __str__(self):
         ret_str = f"Stratage {self.name}\n"
         ret_str += "{\n"
         ret_str += f"\tFirst move: {self.first_move}\n"
-        for i, next_state in enumerate(self.manager):
+        for next_state in self.manager:
             ret_str += indent(str(next_state), "\t")
             ret_str += "\n"
         ret_str += "\n}"
@@ -58,6 +65,9 @@ class Strategy(Clonable):
         new.manager = Manager.from_state_list(list(map(State.clone, src.manager)))
         new.curr_state = 0
         new.first_move = BinarySelector.clone(src.first_move)
+        new.logging = src.logging
+        if src.logging:
+            new.parent = src
         return new
 
     def mutate(self, prob: float) -> Self:
