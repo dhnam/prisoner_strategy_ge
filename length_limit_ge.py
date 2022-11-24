@@ -20,7 +20,7 @@ class LengthLimitEnvironment(Environment):
             self.scores[strt2_idx] = strt2_final_reward
 
     def next_generation(self):
-        # stratage: 100%: percentage-based
+        # strategy: 100%: percentage-based
         for i, next_strategy in enumerate(self.population):
             self.scores[i] -= len(next_strategy.manager) * LENGTH_FACTOR
             if self.scores[i] < 0:

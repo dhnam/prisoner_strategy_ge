@@ -38,7 +38,7 @@ class Strategy(Clonable, NodeMixin):
         return f"{self.name} ({len(self.manager)} states)"
 
     def __str__(self):
-        ret_str = f"Stratage {self.name}\n"
+        ret_str = f"Strategy {self.name}\n"
         ret_str += "{\n"
         ret_str += f"\tFirst move: {self.first_move}\n"
         for next_state in self.manager:
@@ -296,10 +296,10 @@ class Manager:
 if __name__ == "__main__":
     from .duel import Duel
     # TODO: Make test code here
-    stratage1 = Strategy("test1")
-    print(stratage1)
-    stratage2 = Strategy.clone(stratage1).mutate(MUTATE_RATE)
-    stratage2.name = "test2"
-    print(stratage2)
-    for i, (next_response, next_reward) in enumerate(Duel(stratage1, stratage2, REWARD_TABLE, DUEL_LENGTH)):
+    strategy1 = Strategy("test1")
+    print(strategy1)
+    strategy2 = Strategy.clone(strategy1).mutate(MUTATE_RATE)
+    strategy2.name = "test2"
+    print(strategy2)
+    for i, (next_response, next_reward) in enumerate(Duel(strategy1, strategy2, REWARD_TABLE, DUEL_LENGTH)):
         print(f"{i}: {next_response}, {next_reward}")

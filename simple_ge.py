@@ -18,7 +18,7 @@ class SimpleEnvironment(Environment):
             self.scores[strt2_idx] = strt2_final_reward
 
     def next_generation(self):
-        # stratage: 100%: percentage-based
+        # strategy: 100%: percentage-based
         parents = random.choices(self.population, self.scores, k=self.size)
         self.population = []
         self.generation += 1
