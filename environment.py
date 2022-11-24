@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Callable
+import pickle
 from anytree import Node
 from anytree.exporter import DotExporter
 from strategy.basic_config import *
@@ -30,7 +31,7 @@ class Environment(ABC):
     def next_generation(self):
         pass
 
-    def export_history(self, file_path: str, nodename_func: Callable[[Node], str]=lambda x: x.short_str):
+    def export_history_diagram(self, file_path: str, nodename_func: Callable[[Node], str]=lambda x: x.short_str):
         if not self.logging:
             return
         root = Node("")
@@ -40,3 +41,7 @@ class Environment(ABC):
                 return x.name
             return nodename_func(x)
         DotExporter(root, nodenamefunc=nodename).to_picture(file_path)
+
+    def export_log(self, file_path: str):
+        with open(file_path, 'wb') as f:
+            pickle.dump(self.log, f)
