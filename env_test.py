@@ -44,7 +44,7 @@ def test(env_class: type[Environment]):
                     for i, (next_response, next_reward) in enumerate(Duel(strt_1, strt_2, REWARD_TABLE, DUEL_LENGTH)):
                         print(f"{i}: {next_response}, {next_reward}")
             if menu == "h":
-                env.export_history("output.png")
+                env.export_history("output.svg")
                 
         except ValueError:
             print("Invalid input. Please Try again.")

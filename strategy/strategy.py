@@ -2,10 +2,10 @@ from __future__ import annotations
 from typing import TypeVar, Generic, Self
 from random import choices, choice, random, sample
 from textwrap import indent
+from anytree import NodeMixin
 from abc import ABC, abstractmethod
 from .basic_config import *
 from .response import Response
-from anytree import NodeMixin
 
 # Classes: Strategy / State / Transition / Manager
 
