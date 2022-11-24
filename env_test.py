@@ -9,12 +9,6 @@ def test(env_class: type[Environment]):
     env = env_class(population)
     gen: int = 0
     env.generation_processing()
-    sample_strategies = [
-        strategy.sample_strategy.AlwaysCoopStrategy(),
-        strategy.sample_strategy.AlwaysBetrStrategy(),
-        strategy.sample_strategy.TFTStrategy(),
-        None
-        ]
     print(f"====GENERATION {gen}====")
     while True:
         # Menu: process, show top, ...?
@@ -37,12 +31,9 @@ def test(env_class: type[Environment]):
             if menu == "o":
                 print([x for _, x in sorted(zip(env.scores, range(population)), reverse=True)])
             if menu[0] == "S":
-                strt_1 = env.population[int(menu[1:])]
-                sample_strategies[-1] = strt_1
-                for strt_2 in sample_strategies:
-                    print(f"{strt_1.name} VS {strt_2.name}")
-                    for i, (next_response, next_reward) in enumerate(Duel(strt_1, strt_2, REWARD_TABLE, DUEL_LENGTH)):
-                        print(f"{i}: {next_response}, {next_reward}")
+                strt = env.population[int(menu[1:])]
+                tester = strategy.sample_strategy.StrategyTester(strt, REWARD_TABLE, DUEL_LENGTH)
+                tester.print_test()
             if menu == "h":
                 env.export_history_diagram("output.svg")
                 env.export_log("log.pickle")
