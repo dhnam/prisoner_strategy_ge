@@ -56,6 +56,7 @@ class LogExplorer:
         str1 = str(self.existed_populations[strt1_addr[0]][strt1_addr[1]]).splitlines()[2:-1]
         str2 = str(self.existed_populations[strt2_addr[0]][strt2_addr[1]]).splitlines()[2:-1]
         return '\n'.join(difflib.Differ().compare(str1, str2))
+        # TODO: Playing with this differ...
 
     def diff_parent(self, idx: int) -> str:
         return self.diff(
