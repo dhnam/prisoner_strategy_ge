@@ -3,7 +3,7 @@ from typing import Callable, Sequence, Iterator
 from itertools import chain
 
 
-class Diffsbs(difflib.Differ):
+class Diffsxs(difflib.Differ):
     def __init__(self, linejunk: Callable[[str], bool] | None=None, charjunk: Callable[[str], bool]=None):
         super().__init__(linejunk, charjunk)
         self._maxlen: int = -1
@@ -29,11 +29,9 @@ class Diffsbs(difflib.Differ):
                 g = self._dump(' ', a, alo, ahi)
             else:
                 raise ValueError('unknown tag %r' % (tag,))
-            g = self._build_sbs(tag, g, sep=sep)
+            yield from self._build_sbs(g, sep=sep)
 
-            yield from g
-
-    def _build_sbs(self, tag: str, lines: Iterator[str], sep='') -> Iterator[str]:
+    def _build_sbs(self, lines: Iterator[str], sep='') -> Iterator[str]:
         def join_with_spaces(a: str, b: str, space: int, sep='') -> str:
             return ''.join([a.ljust(space), sep, b.ljust(space), "\n"])
 
@@ -126,6 +124,6 @@ seventh"""
                                         b.splitlines(True))),
                     end="")
     print()
-    print(''.join(Diffsbs().comparesbs(a.splitlines(True),
+    print(''.join(Diffsxs().comparesbs(a.splitlines(True),
                                         b.splitlines(True), sep="|")),
                     end="")
