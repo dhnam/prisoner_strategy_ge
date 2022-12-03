@@ -1,46 +1,43 @@
 import difflib
-from typing import Callable, Sequence, Iterator
+from typing import Sequence, Iterator
 from itertools import chain
+from abc import ABC, abstractmethod
 
+class SxsStratagy(ABC):
+    def __init__(self):
+        self.maxlen = -1
+    
+    @abstractmethod
+    def next_line(self, *, a: str="", b: str="", a_replace: str | None=None, b_replace: str | None=None) -> Iterator[str]:
+        pass
 
-class Diffsxs(difflib.Differ):
-    def __init__(self, linejunk: Callable[[str], bool] | None=None, charjunk: Callable[[str], bool]=None):
-        super().__init__(linejunk, charjunk)
-        self._maxlen: int = -1
-        self._recent_indicator: str = ''
-        self._recent_lines: list[str] = []
-        #todo add things...
+class SimpleSxsStratagy(SxsStratagy):
+    def __init__(self, sep=""):
+        super().__init__()
+        self.sep = sep
 
-    def comparesbs(self, a: Sequence[str], b: Sequence[str], sep="") -> Iterator[str]:
-        # Copy-pasted code from cpython difflib
+    def next_line(self, *, a: str="", b: str="", a_replace: str | None=None, b_replace: str | None=None) -> Iterator[str]:
 
-        # First we need to know maximum length to make sbs compare pretty.
-        self._maxlen = max(map(len, chain(a, b))) + 2
-
-        cruncher = difflib.SequenceMatcher(self.linejunk, a, b)
-        for tag, alo, ahi, blo, bhi in cruncher.get_opcodes():
-            if tag == 'replace':
-                g = self._fancy_replace(a, alo, ahi, b, blo, bhi)
-            elif tag == 'delete':
-                g = self._dump('-', a, alo, ahi)
-            elif tag == 'insert':
-                g = self._dump('+', b, blo, bhi)
-            elif tag == 'equal':
-                g = self._dump(' ', a, alo, ahi)
-            else:
-                raise ValueError('unknown tag %r' % (tag,))
-            yield from self._build_sbs(g, sep=sep)
-
-    def _build_sbs(self, lines: Iterator[str], sep='') -> Iterator[str]:
         def join_with_spaces(a: str, b: str, space: int, sep='') -> str:
             return ''.join([a.ljust(space), sep, b.ljust(space), "\n"])
 
-        def new_line_start(*, a: str="", b: str="", a_replace: str | None=None, b_replace: str | None=None) -> Iterator[str]:
-            yield join_with_spaces(a, b, self._maxlen, sep)
-            if any([a_replace, b_replace]):
-                yield join_with_spaces("" if a_replace is None else a_replace,
-                                       "" if b_replace is None else b_replace,
-                                        self._maxlen, sep)
+        yield join_with_spaces(a, b, self.maxlen, self.sep)
+        if any([a_replace, b_replace]):
+            yield join_with_spaces("" if a_replace is None else a_replace,
+                                    "" if b_replace is None else b_replace,
+                                    self.maxlen, self.sep)
+
+class Diffsxs:
+    def __init__(self, sxs_stratagy: SxsStratagy | None=None):
+        self._recent_indicator: str = ''
+        self._recent_lines: list[str] = []
+        if sxs_stratagy is None:
+            sxs_stratagy = SimpleSxsStratagy()
+        self.sxs_stratagy = sxs_stratagy
+
+    def comparesbs(self, a: Sequence[str], b: Sequence[str]) -> Iterator[str]:
+        self.sxs_stratagy.maxlen = max(map(len, chain(a, b))) + 2
+        lines = difflib.Differ().compare(a, b)
         # new line patterns: " ", "-", "+", "-?+", "-+?", "-?+?"
         # tokens: " ", "-", "+", "?"
         for next_line in lines:
@@ -49,61 +46,61 @@ class Diffsxs(difflib.Differ):
             self._recent_lines.append(next_line)
             match self._recent_indicator:
                 case " ":
-                    yield from new_line_start(a=next_line, b=next_line)
+                    yield from self.sxs_stratagy.next_line(a=next_line, b=next_line)
                     self._recent_indicator = ''
                     self._recent_lines = []
                 case "+":
-                    yield from new_line_start(b=next_line)
+                    yield from self.sxs_stratagy.next_line(b=next_line)
                     self._recent_indicator = ''
                     self._recent_lines = []
                 case "- ":
-                    yield from new_line_start(a=self._recent_lines[0])
-                    yield from new_line_start(a=next_line, b=next_line)
+                    yield from self.sxs_stratagy.next_line(a=self._recent_lines[0])
+                    yield from self.sxs_stratagy.next_line(a=next_line, b=next_line)
                     self._recent_indicator = ''
                     self._recent_lines = []
                 case "--":
-                    yield from new_line_start(a=self._recent_lines[0])
+                    yield from self.sxs_stratagy.next_line(a=self._recent_lines[0])
                     self._recent_indicator = "-"
                     self._recent_lines.pop(0)
                 case "-+ ":
-                    yield from new_line_start(a=self._recent_lines[0])
-                    yield from new_line_start(b=self._recent_lines[1])
-                    yield from new_line_start(a=next_line, b=next_line)
+                    yield from self.sxs_stratagy.next_line(a=self._recent_lines[0])
+                    yield from self.sxs_stratagy.next_line(b=self._recent_lines[1])
+                    yield from self.sxs_stratagy.next_line(a=next_line, b=next_line)
                     self._recent_indicator = ''
                     self._recent_lines = []
                 case "-+-":
-                    yield from new_line_start(a=self._recent_lines[0])
-                    yield from new_line_start(b=self._recent_lines[1])
+                    yield from self.sxs_stratagy.next_line(a=self._recent_lines[0])
+                    yield from self.sxs_stratagy.next_line(b=self._recent_lines[1])
                     self._recent_indicator = '-'
                     self._recent_lines = self._recent_lines[2:]
                 case "-++":
-                    yield from new_line_start(a=self._recent_lines[0])
-                    yield from new_line_start(b=self._recent_lines[1])
-                    yield from new_line_start(b=next_line)
+                    yield from self.sxs_stratagy.next_line(a=self._recent_lines[0])
+                    yield from self.sxs_stratagy.next_line(b=self._recent_lines[1])
+                    yield from self.sxs_stratagy.next_line(b=next_line)
                     self._recent_indicator = ''
                     self._recent_lines = []
                 case "-+?":
-                    yield from new_line_start(a=self._recent_lines[0], b=self._recent_lines[1], b_replace=self._recent_lines[2])
+                    yield from self.sxs_stratagy.next_line(a=self._recent_lines[0], b=self._recent_lines[1], b_replace=self._recent_lines[2])
                     self._recent_indicator = ''
                     self._recent_lines = []
                 case "-? " | "-?-" | "-??":
                     raise Exception(self._recent_indicator)
                 case "-?+ ":
-                    yield from new_line_start(a=self._recent_lines[0], b=self._recent_lines[2], a_replace=self._recent_lines[1])
-                    yield from new_line_start(a=next_line, b=next_line)
+                    yield from self.sxs_stratagy.next_line(a=self._recent_lines[0], b=self._recent_lines[2], a_replace=self._recent_lines[1])
+                    yield from self.sxs_stratagy.next_line(a=next_line, b=next_line)
                     self._recent_indicator = ''
                     self._recent_lines = []
                 case "-?+-":
-                    yield from new_line_start(a=self._recent_lines[0], b=self._recent_lines[2], a_replace=self._recent_lines[1])
+                    yield from self.sxs_stratagy.next_line(a=self._recent_lines[0], b=self._recent_lines[2], a_replace=self._recent_lines[1])
                     self._recent_indicator = '-'
                     self._recent_lines = self._recent_lines[3:]
                 case "-?++":
-                    yield from new_line_start(a=self._recent_lines[0], b=self._recent_lines[2], a_replace=self._recent_lines[1])
-                    yield from new_line_start(b=next_line)
+                    yield from self.sxs_stratagy.next_line(a=self._recent_lines[0], b=self._recent_lines[2], a_replace=self._recent_lines[1])
+                    yield from self.sxs_stratagy.next_line(b=next_line)
                     self._recent_indicator = ''
                     self._recent_lines = []
                 case "-?+?":
-                    yield from new_line_start(a=self._recent_lines[0], b=self._recent_lines[2], a_replace=self._recent_lines[1], b_replace=self._recent_lines[3])
+                    yield from self.sxs_stratagy.next_line(a=self._recent_lines[0], b=self._recent_lines[2], a_replace=self._recent_lines[1], b_replace=self._recent_lines[3])
                     self._recent_indicator = ''
                     self._recent_lines = []
         
@@ -124,6 +121,7 @@ seventh"""
                                         b.splitlines(True))),
                     end="")
     print()
-    print(''.join(Diffsxs().comparesbs(a.splitlines(True),
-                                        b.splitlines(True), sep="|")),
+    sxs_stratagy = SimpleSxsStratagy(sep="|")
+    print(''.join(Diffsxs(sxs_stratagy=sxs_stratagy).comparesbs(a.splitlines(True),
+                                                                b.splitlines(True))),
                     end="")
