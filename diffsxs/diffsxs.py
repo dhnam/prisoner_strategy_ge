@@ -80,7 +80,7 @@ class Diffsxs:
         self.sxs_stratagy = sxs_stratagy
 
     def comparesxs(self, a: Sequence[str], b: Sequence[str]) -> Iterator[str]:
-        self.sxs_stratagy.maxlen = max(map(wcswidth, map(str.strip, a))) + 2
+        self.sxs_stratagy.maxlen = max(map(wcswidth, map(lambda x: x.strip("\n"), a))) + 2
         lines = difflib.Differ().compare(a, b)
         # new line patterns: " ", "-", "+", "-?+", "-+?", "-?+?"
         # tokens: " ", "-", "+", "?"
