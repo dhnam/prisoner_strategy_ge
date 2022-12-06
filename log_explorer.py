@@ -4,6 +4,7 @@ from anytree import Node, ZigZagGroupIter
 from strategy.strategy import Strategy
 from strategy.sample_strategy import StrategyTester
 from strategy.basic_config import DUEL_LENGTH, REWARD_TABLE
+from diffsxs.diffsxs import Diffsxs
 
 class LogExplorer:
     def __init__(self, path: str):
@@ -53,9 +54,9 @@ class LogExplorer:
         return self.from_index(idx).parent
 
     def diff(self, strt1_addr: tuple[int, int], strt2_addr: tuple[int, int]) -> str:
-        str1 = str(self.existed_populations[strt1_addr[0]][strt1_addr[1]]).splitlines()[2:-1]
-        str2 = str(self.existed_populations[strt2_addr[0]][strt2_addr[1]]).splitlines()[2:-1]
-        return '\n'.join(difflib.Differ().compare(str1, str2))
+        str1 = str(self.existed_populations[strt1_addr[0]][strt1_addr[1]]).replace("\t", "    ").splitlines(True)[2:-1]
+        str2 = str(self.existed_populations[strt2_addr[0]][strt2_addr[1]]).replace("\t", "    ").splitlines(True)[2:-1]
+        return ''.join(Diffsxs().comparesxs(str1, str2))
         # TODO: Playing with this differ...
 
     def diff_parent(self, idx: int) -> str:
