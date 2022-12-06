@@ -82,6 +82,9 @@ class Diffsxs:
     def comparesxs(self, a: Sequence[str], b: Sequence[str]) -> Iterator[str]:
         self.sxs_stratagy.maxlen = max(map(wcswidth, map(lambda x: x.strip("\n"), a))) + 2
         lines = difflib.Differ().compare(a, b)
+
+        # TODO: Make 'new line with completed pattern' function, which might simplify code a lot.
+
         # new line patterns: " ", "-", "+", "-?+", "-+?", "-?+?"
         # tokens: " ", "-", "+", "?"
         for next_line in lines:
