@@ -1,3 +1,4 @@
 tqdm
 anytree
 graphviz
+wcwidth
