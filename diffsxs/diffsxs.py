@@ -132,7 +132,7 @@ class Diffsxs:
                 case "-+ ":
                     yield from completed_pattern("-")
                     yield from completed_pattern("+")
-                    yield from completed_pattern("=")
+                    yield from completed_pattern(" ")
                 case "-+-":
                     yield from completed_pattern("-")
                     yield from completed_pattern("+")
