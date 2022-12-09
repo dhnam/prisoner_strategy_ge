@@ -83,99 +83,79 @@ class Diffsxs:
         self.sxs_stratagy.maxlen = max(map(wcswidth, map(lambda x: x.strip("\n"), a))) + 2
         lines = difflib.Differ().compare(a, b)
 
-        # TODO: Make 'new line with completed pattern' function, which might simplify code a lot.
-
         # new line patterns: " ", "-", "+", "-?+", "-+?", "-?+?"
         # tokens: " ", "-", "+", "?"
+        def completed_pattern(indicator: str) -> Iterator[str]:
+            assert self._recent_indicator.startswith(indicator)
+            match indicator:
+                case " ":
+                    yield from self.sxs_stratagy.next_line(a=self._recent_lines[0], b=self._recent_lines[0])
+                    self._recent_indicator = self._recent_indicator[1:]
+                    self._recent_lines = self._recent_lines[1:]
+                case "+":
+                    yield from self.sxs_stratagy.next_line(b=self._recent_lines[0])
+                    self._recent_indicator = self._recent_indicator[1:]
+                    self._recent_lines = self._recent_lines[1:]
+                case "-":
+                    yield from self.sxs_stratagy.next_line(a=self._recent_lines[0])
+                    self._recent_indicator = self._recent_indicator[1:]
+                    self._recent_lines = self._recent_lines[1:]
+                case "-?+":
+                    yield from self.sxs_stratagy.next_line(a=self._recent_lines[0], b=self._recent_lines[2], a_replace=self._recent_lines[1])
+                    self._recent_indicator = self._recent_indicator[3:]
+                    self._recent_lines = self._recent_lines[3:]
+                case "-+?":
+                    yield from self.sxs_stratagy.next_line(a=self._recent_lines[0], b=self._recent_lines[1], b_replace=self._recent_lines[2])
+                    self._recent_indicator = self._recent_indicator[3:]
+                    self._recent_lines = self._recent_lines[3:]
+                case "-?+?":
+                    yield from self.sxs_stratagy.next_line(a=self._recent_lines[0], b=self._recent_lines[2], a_replace=self._recent_lines[1], b_replace=self._recent_lines[3])
+                    self._recent_indicator = self._recent_indicator[4:]
+                    self._recent_lines = self._recent_lines[4:]
+
         for next_line in lines:
             next_line = next_line.strip("\n")
             self._recent_indicator += next_line[0]
             self._recent_lines.append(next_line)
             
+            
             match self._recent_indicator:
                 case " ":
-                    yield from self.sxs_stratagy.next_line(a=next_line, b=next_line)
-                    self._recent_indicator = ''
-                    self._recent_lines = []
+                    yield from completed_pattern(" ")
                 case "+":
-                    yield from self.sxs_stratagy.next_line(b=next_line)
-                    self._recent_indicator = ''
-                    self._recent_lines = []
+                    yield from completed_pattern("+")
                 case "- ":
-                    yield from self.sxs_stratagy.next_line(a=self._recent_lines[0])
-                    yield from self.sxs_stratagy.next_line(a=next_line, b=next_line)
-                    self._recent_indicator = ''
-                    self._recent_lines = []
+                    yield from completed_pattern("-")
+                    yield from completed_pattern(" ")
                 case "--":
-                    yield from self.sxs_stratagy.next_line(a=self._recent_lines[0])
-                    self._recent_indicator = "-"
-                    self._recent_lines.pop(0)
+                    yield from completed_pattern("-")
                 case "-+ ":
-                    yield from self.sxs_stratagy.next_line(a=self._recent_lines[0])
-                    yield from self.sxs_stratagy.next_line(b=self._recent_lines[1])
-                    yield from self.sxs_stratagy.next_line(a=next_line, b=next_line)
-                    self._recent_indicator = ''
-                    self._recent_lines = []
+                    yield from completed_pattern("-")
+                    yield from completed_pattern("+")
+                    yield from completed_pattern("=")
                 case "-+-":
-                    yield from self.sxs_stratagy.next_line(a=self._recent_lines[0])
-                    yield from self.sxs_stratagy.next_line(b=self._recent_lines[1])
-                    self._recent_indicator = '-'
-                    self._recent_lines = self._recent_lines[2:]
+                    yield from completed_pattern("-")
+                    yield from completed_pattern("+")
                 case "-++":
-                    yield from self.sxs_stratagy.next_line(a=self._recent_lines[0])
-                    yield from self.sxs_stratagy.next_line(b=self._recent_lines[1])
-                    yield from self.sxs_stratagy.next_line(b=next_line)
-                    self._recent_indicator = ''
-                    self._recent_lines = []
+                    yield from completed_pattern("-")
+                    yield from completed_pattern("+")
+                    yield from completed_pattern("+")
                 case "-+?":
-                    yield from self.sxs_stratagy.next_line(a=self._recent_lines[0], b=self._recent_lines[1], b_replace=self._recent_lines[2])
-                    self._recent_indicator = ''
-                    self._recent_lines = []
+                    yield from completed_pattern("-+?")
                 case "-? " | "-?-" | "-??":
                     raise Exception(self._recent_indicator)
                 case "-?+ ":
-                    yield from self.sxs_stratagy.next_line(a=self._recent_lines[0], b=self._recent_lines[2], a_replace=self._recent_lines[1])
-                    yield from self.sxs_stratagy.next_line(a=next_line, b=next_line)
-                    self._recent_indicator = ''
-                    self._recent_lines = []
+                    yield from completed_pattern("-?+")
+                    yield from completed_pattern(" ")
                 case "-?+-":
-                    yield from self.sxs_stratagy.next_line(a=self._recent_lines[0], b=self._recent_lines[2], a_replace=self._recent_lines[1])
-                    self._recent_indicator = '-'
-                    self._recent_lines = self._recent_lines[3:]
+                    yield from completed_pattern("-?+")
                 case "-?++":
-                    yield from self.sxs_stratagy.next_line(a=self._recent_lines[0], b=self._recent_lines[2], a_replace=self._recent_lines[1])
-                    yield from self.sxs_stratagy.next_line(b=next_line)
-                    self._recent_indicator = ''
-                    self._recent_lines = []
+                    yield from completed_pattern("-?+")
+                    yield from completed_pattern("+")
                 case "-?+?":
-                    yield from self.sxs_stratagy.next_line(a=self._recent_lines[0], b=self._recent_lines[2], a_replace=self._recent_lines[1], b_replace=self._recent_lines[3])
-                    self._recent_indicator = ''
-                    self._recent_lines = []
-        match self._recent_indicator:
-            case " ":
-                yield from self.sxs_stratagy.next_line(a=self._recent_lines[0], b=self._recent_lines[0])
-                self._recent_indicator = ''
-                self._recent_lines = []
-            case "+":
-                yield from self.sxs_stratagy.next_line(b=self._recent_lines[0])
-                self._recent_indicator = ''
-                self._recent_lines = []
-            case "-":
-                yield from self.sxs_stratagy.next_line(a=self._recent_lines[0])
-                self._recent_indicator = ''
-                self._recent_lines = []
-            case "-?+":
-                yield from self.sxs_stratagy.next_line(a=self._recent_lines[0], b=self._recent_lines[2], a_replace=self._recent_lines[1])
-                self._recent_indicator = ''
-                self._recent_lines = []
-            case "-+?":
-                yield from self.sxs_stratagy.next_line(a=self._recent_lines[0], b=self._recent_lines[1], b_replace=self._recent_lines[2])
-                self._recent_indicator = ''
-                self._recent_lines = []
-            case "-?+?":
-                yield from self.sxs_stratagy.next_line(a=self._recent_lines[0], b=self._recent_lines[2], a_replace=self._recent_lines[1], b_replace=self._recent_lines[3])
-                self._recent_indicator = ''
-                self._recent_lines = []
+                    yield from completed_pattern("-?+?")
+        if self._recent_indicator != "":
+            yield from completed_pattern(self._recent_indicator)
             
         
 if __name__ == "__main__":
